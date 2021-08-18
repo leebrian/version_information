@@ -47,9 +47,7 @@ Usage
    (the ``version`` field from ``setup.py``).
 
 """
-import cgi
 import json
-import sys
 import time
 import locale
 import IPython
@@ -81,24 +79,24 @@ class VersionInformation(Magics):
 
         """
         self.packages = [
-            ("Python", "{version} {arch} [{compiler}]".format(
+            ('Python', '{version} {arch} [{compiler}]'.format(
                 version=platform.python_version(),
                 arch=platform.architecture()[0],
                 compiler=platform.python_compiler())),
-            ("IPython", IPython.__version__),
-            ("OS", platform.platform().replace('-', ' '))
+            ('IPython', IPython.__version__),
+            ('OS', platform.platform().replace('-', ' '))
             ]
 
-        modules = line.replace(' ', '').split(",")
+        modules = line.replace(' ', '').split(',')
 
         for module in modules:
             if len(module) > 0:
                 try:
-                    code = ("import %s; version=str(%s.__version__)" %
+                    code = ('import %s; version=str(%s.__version__)' %
                             (module, module))
                     ns_g = ns_l = {}
-                    exec(compile(code, "<string>", "exec"), ns_g, ns_l)
-                    self.packages.append((module, ns_l["version"]))
+                    exec(compile(code, '<string>', 'exec'), ns_g, ns_l)
+                    self.packages.append((module, ns_l['version']))
                 except Exception as e:
                     try:
                         if pkg_resources is None:
@@ -120,22 +118,40 @@ class VersionInformation(Magics):
         else:
             return json.dumps(obj)
 
+    @staticmethod
+    def _htmltable_escape(str_):
+        CHARS = {
+            '&':  r'\&',
+            '%':  r'\%',
+            '$':  r'\$',
+            '#':  r'\#',
+            '_':  r'\_',
+            '{':  r'\letteropenbrace{}',
+            '}':  r'\letterclosebrace{}',
+            '~':  r'\lettertilde{}',
+            '^':  r'\letterhat{}',
+            '\\': r'\letterbackslash{}',
+            '>':  r'\textgreater',
+            '<':  r'\textless',
+        }
+        return u''.join([CHARS.get(c, c) for c in str_])
+
     def _repr_html_(self):
 
-        html = "<table>"
-        html += "<tr><th>Software</th><th>Version</th></tr>"
+        html_table = '<table>'
+        html_table += '<tr><th>Software</th><th>Version</th></tr>'
         for name, version in self.packages:
-            _version = cgi.escape(version)
-            html += "<tr><td>%s</td><td>%s</td></tr>" % (name, _version)
+            _version = self._htmltable_escape(version)
+            html_table += '<tr><td>%s</td><td>%s</td></tr>' % (name, _version)
 
         try:
-            html += "<tr><td colspan='2'>%s</td></tr>" % time.strftime(timefmt)
+            html_table += '<tr><td colspan=\'2\'>%s</td></tr>' % time.strftime(timefmt)
         except:
-            html += "<tr><td colspan='2'>%s</td></tr>" % \
+            html_table += '<tr><td colspan=\'2\'>%s</td></tr>' % \
                 time.strftime(timefmt).decode(_date_format_encoding())
-        html += "</table>"
+        html_table += '</table>'
 
-        return html
+        return html_table
 
     @staticmethod
     def _latex_escape(str_):
@@ -153,37 +169,37 @@ class VersionInformation(Magics):
             '>':  r'\textgreater',
             '<':  r'\textless',
         }
-        return u"".join([CHARS.get(c, c) for c in str_])
+        return u''.join([CHARS.get(c, c) for c in str_])
 
     def _repr_latex_(self):
 
-        latex = r"\begin{tabular}{|l|l|}\hline" + "\n"
-        latex += r"{\bf Software} & {\bf Version} \\ \hline\hline" + "\n"
+        latex = r'\begin{tabular}{|l|l|}\hline' + '\n'
+        latex += r'{\bf Software} & {\bf Version} \\ \hline\hline' + '\n'
         for name, version in self.packages:
             _version = self._latex_escape(version)
-            latex += r"%s & %s \\ \hline" % (name, _version) + "\n"
+            latex += r'%s & %s \\ \hline' % (name, _version) + '\n'
 
         try:
-            latex += r"\hline \multicolumn{2}{|l|}{%s} \\ \hline" % \
-                time.strftime(timefmt) + "\n"
+            latex += r'\hline \multicolumn{2}{|l|}{%s} \\ \hline' % \
+                time.strftime(timefmt) + '\n'
         except:
-            latex += r"\hline \multicolumn{2}{|l|}{%s} \\ \hline" % \
-                time.strftime(timefmt).decode(_date_format_encoding()) + "\n"
+            latex += r'\hline \multicolumn{2}{|l|}{%s} \\ \hline' % \
+                time.strftime(timefmt).decode(_date_format_encoding()) + '\n'
 
-        latex += r"\end{tabular}" + "\n"
+        latex += r'\end{tabular}' + '\n'
 
         return latex
 
     def _repr_pretty_(self, pp, cycle):
 
-        text = "Software versions\n"
+        text = 'Software versions\n'
         for name, version in self.packages:
-            text += "%s %s\n" % (name, version)
+            text += '%s %s\n' % (name, version)
 
         try:
-            text += "%s" % time.strftime(timefmt)
+            text += '%s' % time.strftime(timefmt)
         except:
-            text += "%s" % \
+            text += '%s' % \
                 time.strftime(timefmt).decode(_date_format_encoding())
 
         pp.text(text)
